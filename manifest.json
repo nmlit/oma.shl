@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "id": "oma.shl",
+  "name": "SHL",
+  "version": "0.1.0",
+  "author": "oma.shl",
+  "license": "MIT",
+  "description": "Nästa SHL-match och live-ställning i Omarchy-baren.",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "SHL",
+    "description": "Kommande matcher och resultat. Vänsterklick öppnar panelen.",
+    "category": "Info",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "favoriteTeam": "",
+      "useMock": false,
+      "scheduleUrl": "https://stats.swehockey.se/ScheduleAndResults/Schedule/20961",
+      "refreshMinutesIdle": 20,
+      "refreshSecondsLive": 45,
+      "alertMinutes": 10,
+      "alertSound": true,
+      "alertBlink": true,
+      "tvGuideUrl": "https://www.tv.nu/sport/ishockey/liga/shl"
+    },
+    "schema": [
+      {
+        "key": "favoriteTeam",
+        "type": "string",
+        "label": "Favoritlag",
+        "defaultValue": "",
+        "description": "Kortnamn eller del av lagnamn, t.ex. DIF, Färjestad, Luleå. Tomt = alla lag."
+      },
+      {
+        "key": "useMock",
+        "type": "boolean",
+        "label": "Använd mock-data",
+        "defaultValue": true,
+        "description": "På = inbyggd premiäromgång 19 sep 2026. Av = hämta stats.swehockey.se."
+      },
+      {
+        "key": "scheduleUrl",
+        "type": "string",
+        "label": "Schema-URL",
+        "defaultValue": "https://stats.swehockey.se/ScheduleAndResults/Schedule/20961",
+        "description": "Swehockey ScheduleAndResults-URL. Säsongs-id byts varje år."
+      },
+      {
+        "key": "refreshMinutesIdle",
+        "type": "integer",
+        "label": "Uppdatering utan live (min)",
+        "min": 5,
+        "max": 120,
+        "step": 5,
+        "defaultValue": 20
+      },
+      {
+        "key": "refreshSecondsLive",
+        "type": "integer",
+        "label": "Uppdatering under live (s)",
+        "min": 20,
+        "max": 180,
+        "step": 5,
+        "defaultValue": 45
+      },
+      {
+        "key": "tvGuideUrl",
+        "type": "string",
+        "label": "TV-tablå URL",
+        "defaultValue": "https://www.tv.nu/sport/ishockey/liga/shl",
+        "description": "Källa för linjära kanaler (tv.nu). TV4 Play ignoreras."
+      },
+      {
+        "key": "alertMinutes",
+        "type": "integer",
+        "label": "Varning före avspark (min)",
+        "min": 1,
+        "max": 60,
+        "step": 1,
+        "defaultValue": 10
+      },
+      {
+        "key": "alertSound",
+        "type": "boolean",
+        "label": "Pling 10 min före match",
+        "defaultValue": true
+      },
+      {
+        "key": "alertBlink",
+        "type": "boolean",
+        "label": "Blinka i baren före match",
+        "defaultValue": true
+      }
+    ]
+  }
+}
