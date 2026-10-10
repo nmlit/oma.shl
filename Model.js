@@ -211,8 +211,8 @@ function playPingCommand(customPath) {
   var pick = "f=''; " +
     (custom ? "if [ -f '" + custom + "' ]; then f='" + custom + "'; fi; " : "") +
     "if [ -z \"$f\" ]; then " +
-    "for c in /usr/share/sounds/freedesktop/stereo/message.oga " +
-    "/usr/share/sounds/freedesktop/stereo/complete.oga " +
+    "for c in /usr/share/sounds/freedesktop/stereo/complete.oga " +
+    "/usr/share/sounds/freedesktop/stereo/message.oga " +
     "/usr/share/sounds/freedesktop/stereo/dialog-information.oga " +
     "/usr/share/sounds/freedesktop/stereo/message-new-instant.oga; do " +
     "[ -f \"$c\" ] && f=$c && break; done; fi; "

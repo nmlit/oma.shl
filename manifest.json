@@ -95,7 +95,7 @@
         "type": "string",
         "label": "Eget plingljud",
         "defaultValue": "",
-        "description": "Sökväg till ogg/wav. Tomt = mjukt systemljud (message.oga)."
+        "description": "Sökväg till ogg/wav. Tomt = complete.oga."
       },
       {
         "key": "alertBlink",
