@@ -129,12 +129,12 @@ Panel {
     if (pingProc.running) {
       pingProc.running = false
       Qt.callLater(function() {
-        pingProc.command = Model.playPingCommand(alertSoundFile)
+        pingProc.command = Model.playPingCommand(alertSoundFile, bundledHorn)
         pingProc.running = true
       })
       return
     }
-    pingProc.command = Model.playPingCommand(alertSoundFile)
+    pingProc.command = Model.playPingCommand(alertSoundFile, bundledHorn)
     pingProc.running = true
   }
 
