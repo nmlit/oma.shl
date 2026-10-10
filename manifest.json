@@ -25,6 +25,7 @@
       "alertMinutes": 10,
       "alertSound": true,
       "alertBlink": true,
+      "alertSoundFile": "",
       "tvGuideUrl": "https://www.tv.nu/sport/ishockey/liga/shl"
     },
     "schema": [
@@ -88,6 +89,13 @@
         "type": "boolean",
         "label": "Pling 10 min före match",
         "defaultValue": true
+      },
+      {
+        "key": "alertSoundFile",
+        "type": "string",
+        "label": "Eget plingljud",
+        "defaultValue": "",
+        "description": "Sökväg till ogg/wav. Tomt = mjukt systemljud (message.oga)."
       },
       {
         "key": "alertBlink",

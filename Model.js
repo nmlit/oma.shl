@@ -206,20 +206,24 @@ function startingSoon(games, now, minutes) {
   return hits
 }
 
-function playPingCommand() {
+function playPingCommand(customPath) {
+  var custom = String(customPath || "").replace(/'/g, "")
+  var pick = "f=''; " +
+    (custom ? "if [ -f '" + custom + "' ]; then f='" + custom + "'; fi; " : "") +
+    "if [ -z \"$f\" ]; then " +
+    "for c in /usr/share/sounds/freedesktop/stereo/message.oga " +
+    "/usr/share/sounds/freedesktop/stereo/complete.oga " +
+    "/usr/share/sounds/freedesktop/stereo/dialog-information.oga " +
+    "/usr/share/sounds/freedesktop/stereo/message-new-instant.oga; do " +
+    "[ -f \"$c\" ] && f=$c && break; done; fi; "
   return [
     "/bin/sh", "-c",
-    "f=''; " +
-    "for c in /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga " +
-    "/usr/share/sounds/freedesktop/stereo/complete.oga " +
-    "/usr/share/sounds/freedesktop/stereo/message.oga " +
-    "/usr/share/sounds/freedesktop/stereo/bell.oga; do " +
-    "[ -f \"$c\" ] && f=$c && break; done; " +
+    pick +
     "notify-send -a oma.shl -u normal 'SHL' '10 minuter till avspark' >/dev/null 2>&1 || true; " +
     "if [ -n \"$f\" ] && [ -x /usr/bin/pw-play ]; then /usr/bin/pw-play \"$f\" && exit 0; fi; " +
     "if [ -n \"$f\" ] && [ -x /usr/bin/paplay ]; then /usr/bin/paplay \"$f\" && exit 0; fi; " +
     "if [ -n \"$f\" ] && [ -x /usr/bin/ffplay ]; then /usr/bin/ffplay -nodisp -autoexit -loglevel quiet \"$f\" && exit 0; fi; " +
-    "if [ -x /usr/bin/canberra-gtk-play ]; then /usr/bin/canberra-gtk-play -i bell; fi"
+    "if [ -x /usr/bin/canberra-gtk-play ]; then /usr/bin/canberra-gtk-play -i message; fi"
   ]
 }
 

@@ -24,6 +24,7 @@ Panel {
   readonly property int refreshSecondsLive: Math.max(20, parseInt(setting("refreshSecondsLive", 45), 10) || 45)
   readonly property int alertMinutes: Math.max(1, parseInt(setting("alertMinutes", 10), 10) || 10)
   readonly property bool alertSound: setting("alertSound", true) !== false && setting("alertSound", true) !== "false"
+  readonly property string alertSoundFile: String(setting("alertSoundFile", "") || "")
   readonly property bool alertBlink: setting("alertBlink", true) !== false && setting("alertBlink", true) !== "false"
 
   readonly property color contentForeground: bar ? bar.foreground : Color.foreground
@@ -123,12 +124,12 @@ Panel {
     if (pingProc.running) {
       pingProc.running = false
       Qt.callLater(function() {
-        pingProc.command = Model.playPingCommand()
+        pingProc.command = Model.playPingCommand(alertSoundFile)
         pingProc.running = true
       })
       return
     }
-    pingProc.command = Model.playPingCommand()
+    pingProc.command = Model.playPingCommand(alertSoundFile)
     pingProc.running = true
   }
 
