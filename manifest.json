@@ -95,7 +95,7 @@
         "type": "string",
         "label": "Eget plingljud",
         "defaultValue": "",
-        "description": "Sökväg till ogg/wav. Tomt = complete.oga."
+        "description": "Sökväg till ogg/wav. Tomt = inbyggda goalhorn.ogg."
       },
       {
         "key": "alertBlink",

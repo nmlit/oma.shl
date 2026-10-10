@@ -25,6 +25,11 @@ Panel {
   readonly property int alertMinutes: Math.max(1, parseInt(setting("alertMinutes", 10), 10) || 10)
   readonly property bool alertSound: setting("alertSound", true) !== false && setting("alertSound", true) !== "false"
   readonly property string alertSoundFile: String(setting("alertSoundFile", "") || "")
+  readonly property string bundledHorn: {
+    var u = String(Qt.resolvedUrl("goalhorn.ogg") || "")
+    if (u.indexOf("file://") === 0) u = u.slice(7)
+    return u
+  }
   readonly property bool alertBlink: setting("alertBlink", true) !== false && setting("alertBlink", true) !== "false"
 
   readonly property color contentForeground: bar ? bar.foreground : Color.foreground

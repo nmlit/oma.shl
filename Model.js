@@ -206,10 +206,12 @@ function startingSoon(games, now, minutes) {
   return hits
 }
 
-function playPingCommand(customPath) {
+function playPingCommand(customPath, bundledPath) {
   var custom = String(customPath || "").replace(/'/g, "")
+  var bundled = String(bundledPath || "").replace(/'/g, "")
   var pick = "f=''; " +
     (custom ? "if [ -f '" + custom + "' ]; then f='" + custom + "'; fi; " : "") +
+    (bundled ? "if [ -z \"$f\" ] && [ -f '" + bundled + "' ]; then f='" + bundled + "'; fi; " : "") +
     "if [ -z \"$f\" ]; then " +
     "for c in /usr/share/sounds/freedesktop/stereo/complete.oga " +
     "/usr/share/sounds/freedesktop/stereo/message.oga " +

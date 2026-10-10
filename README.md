@@ -48,7 +48,7 @@ omarchy bar set oma.shl alertSound true
 omarchy bar set oma.shl alertBlink true
 ```
 
-10 min före avspark blinkar baren i 10 sekunder. Ett pling spelas en gång per match (`pw-play`, `paplay` eller `ffplay`). Favoritlag begränsar även varningen.
+10 min före avspark blinkar baren i 10 sekunder. Standardljud är `goalhorn.ogg` i plugin-mappen. Eget ljud via `alertSoundFile`.
 
 `useMock` är av som default. Slå på bara om du vill testa den inbyggda premiäromgången.
 
