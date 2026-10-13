@@ -6,6 +6,12 @@ Plugin-id: `oma.shl`
 
 ## Installera
 
+### Installera från GitHub
+
+```bash
+omarchy plugin add https://github.com/nmlit/oma.shl.git --enable
+```
+
 Kopiera mappen till plugin-katalogen (inga symlinks — Omarchy vägrar dem):
 
 ```bash
