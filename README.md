@@ -54,7 +54,7 @@ omarchy bar set oma.shl alertSound true
 omarchy bar set oma.shl alertBlink true
 ```
 
-10 min före avspark blinkar baren i 10 sekunder. Standardljud är `goalhorn.ogg` i plugin-mappen. Eget ljud via `alertSoundFile`.
+10 min före nedsläpp blinkar baren i 10 sekunder. Standardljud är `goalhorn.ogg` i plugin-mappen. Eget ljud via `alertSoundFile`.
 
 `useMock` är av som default. Slå på bara om du vill testa den inbyggda premiäromgången.
 
@@ -64,7 +64,7 @@ Säsongs-id i URL:en byts varje år. 2026/27 = `20961`.
 
 - Mock: inbyggt schema.
 - Live-källa: HTML från stats.swehockey.se via `curl`. Parsern är medvetet enkel och går sönder om sidans markup ändras. Då faller pluginet tillbaka till senast lyckad lista / mock.
-- Det finns ingen officiell publik live-feed. “LIVE” sätts om klockan ligger inom tre timmar efter avspark och resultatet inte är markerat som slut. Ställning kräver att swehockey-sidan redan har siffror.
+- Det finns ingen officiell publik live-feed. “LIVE” sätts om klockan ligger inom tre timmar efter nedsläpp och resultatet inte är markerat som slut. Ställning kräver att swehockey-sidan redan har siffror.
 
 ## Filstruktur
 

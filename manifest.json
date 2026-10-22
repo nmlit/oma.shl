@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "oma.shl",
   "name": "SHL",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "oma.shl",
   "license": "MIT",
   "description": "Nästa SHL-match och live-ställning i Omarchy-baren.",
@@ -78,7 +78,7 @@
       {
         "key": "alertMinutes",
         "type": "integer",
-        "label": "Varning före avspark (min)",
+        "label": "Varning före nedsläpp (min)",
         "min": 1,
         "max": 60,
         "step": 1,

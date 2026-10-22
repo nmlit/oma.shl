@@ -221,7 +221,7 @@ function playPingCommand(customPath, bundledPath) {
   return [
     "/bin/sh", "-c",
     pick +
-    "notify-send -a oma.shl -u normal 'SHL' '10 minuter till avspark' >/dev/null 2>&1 || true; " +
+    "notify-send -a oma.shl -u normal 'SHL' '10 minuter till nedsläpp' >/dev/null 2>&1 || true; " +
     "if [ -n \"$f\" ] && [ -x /usr/bin/pw-play ]; then /usr/bin/pw-play \"$f\" && exit 0; fi; " +
     "if [ -n \"$f\" ] && [ -x /usr/bin/paplay ]; then /usr/bin/paplay \"$f\" && exit 0; fi; " +
     "if [ -n \"$f\" ] && [ -x /usr/bin/ffplay ]; then /usr/bin/ffplay -nodisp -autoexit -loglevel quiet \"$f\" && exit 0; fi; " +
