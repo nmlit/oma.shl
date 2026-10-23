@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "oma.shl",
   "name": "SHL",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": "oma.shl",
   "license": "MIT",
   "description": "Nästa SHL-match och live-ställning i Omarchy-baren.",
@@ -73,7 +73,7 @@
         "type": "string",
         "label": "TV-tablå URL",
         "defaultValue": "https://www.tv.nu/sport/ishockey/liga/shl",
-        "description": "Källa för linjära kanaler (tv.nu). TV4 Play ignoreras."
+        "description": "Källa för linjära kanaler (tv.nu + tvmatchen.nu). TV4 Play ignoreras."
       },
       {
         "key": "alertMinutes",

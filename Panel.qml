@@ -154,7 +154,7 @@ Panel {
 
   function startTvFetch() {
     if (!tvGuideUrl) return
-    tvProc.command = Model.cappedCurl(tvGuideUrl, 20, Model.MAX_HTML_BYTES)
+    tvProc.command = Model.tvCurl(tvGuideUrl, 20, Model.MAX_HTML_BYTES)
     if (tvProc.running) {
       tvProc.running = false
       Qt.callLater(function() { tvProc.running = true })
@@ -182,6 +182,7 @@ Panel {
   onFavoriteTeamChanged: rebuild()
   onUseMockChanged: refresh()
   onScheduleUrlChanged: { if (!useMock) refresh() }
+  onTvGuideUrlChanged: startTvFetch()
 
   Timer {
     id: pollTimer

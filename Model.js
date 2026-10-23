@@ -281,14 +281,50 @@ function statusSv(status) {
   return ""
 }
 
+var TV_FALLBACK_URL = "https://www.tvmatchen.nu/ishockey/shl/"
+
+var MONTHS_MAP = {
+  "jan": 0, "feb": 1, "mar": 2, "apr": 3, "may": 4, "maj": 4, "jun": 5,
+  "jul": 6, "aug": 7, "sep": 8, "oct": 9, "okt": 9, "nov": 10, "dec": 11
+}
+
+var TVMATCHEN_CHANNELS = {
+  "816": "TV4 Hockey",
+  "817": "TV4 Sport Live 1",
+  "818": "TV4 Sport Live 2",
+  "819": "TV4 Sport Live 3",
+  "821": "TV4 Sport Live 4",
+  "822": "TV4 Sportkanalen",
+  "823": "TV4",
+  "830": "TV12",
+  "1133": "TV4 Tennis",
+  "1134": "TV4 Motor",
+  "2182": "Sjuan"
+}
+
 function cappedCurl(url, timeoutSec, maxBytes) {
   return [
     "sh", "-c",
-    "curl -fsSL -A 'oma.shl/0.1' --max-time \"$2\" --max-filesize \"$3\" -o - -- \"$1\" | head -c \"$3\"",
+    "curl -fsSL -A 'oma.shl/0.1' --max-time \"$2\" -o - -- \"$1\" | head -c \"$3\"",
     "oma.shl-fetch",
     String(url || ""),
     String(timeoutSec),
     String(maxBytes)
+  ]
+}
+
+function tvCurl(url, timeoutSec, maxBytes) {
+  var primary = String(url || "")
+  var secondary = primary.indexOf("tvmatchen.nu") !== -1 ? "" : TV_FALLBACK_URL
+  return [
+    "sh", "-c",
+    "curl -fsSL -A 'oma.shl/0.1' --max-time \"$2\" -o - -- \"$1\" 2>/dev/null | head -c \"$3\" || true; " +
+    "if [ -n \"$4\" ]; then printf '\\n'; curl -fsSL -A 'oma.shl/0.1' --max-time \"$2\" -o - -- \"$4\" 2>/dev/null | head -c \"$3\" || true; fi",
+    "oma.shl-tv-fetch",
+    primary,
+    String(timeoutSec),
+    String(maxBytes),
+    secondary
   ]
 }
 
@@ -393,7 +429,7 @@ function teamNorm(name) {
     .toLowerCase()
     .replace(/[.]/g, "")
     .replace(/\s+/g, " ")
-    .replace(/ if$| hc$| hk$| bk$| ik$| hf$| hockey$/g, "")
+    .replace(/ if$| hc$| hk$| bk$| ik$| hf$| aik$| hockey$/g, "")
     .replace(/^if /, "")
     .replace("färjestads", "färjestad")
     .replace("färjestad", "färjestad")
@@ -458,7 +494,7 @@ function extractTvState(raw) {
   var m = html.match(/__INITIAL_STATE__\s*=\s*"((?:\\.|[^"\\])*)"/)
   if (!m) return null
   try {
-    var text = JSON.parse('"' + m[1] + '"')
+    var text = JSON.parse("\"" + m[1] + "\"")
     var data = JSON.parse(text)
     return data && data.sportPageSchedule ? data : null
   } catch (e) {
@@ -473,11 +509,7 @@ function isoFromMs(ms) {
     "T" + pad2(d.getHours()) + ":" + pad2(d.getMinutes())
 }
 
-function parseTvGuide(raw) {
-  return parseTvGuideFull(raw).listings
-}
-
-function parseTvGuideFull(raw) {
+function parseTvNuFull(raw) {
   var empty = { listings: [], games: [] }
   var data = extractTvState(raw)
   if (!data) return empty
@@ -496,9 +528,10 @@ function parseTvGuideFull(raw) {
       if (cn) chans.push(cn)
     }
     var channel = pickLinearChannel(chans)
-    listings.push({ home: home, away: away, channel: channel })
     var start = isoFromMs(it.eventTime)
     if (!start && it.scheduleDate) start = String(it.scheduleDate) + "T00:00"
+    var date = start ? start.slice(0, 10) : String(it.scheduleDate || "")
+    listings.push({ date: date, home: home, away: away, channel: channel })
     var row = g(start, home, away, "", null, null, "scheduled")
     row.channel = channel
     row.channelShort = channel
@@ -507,19 +540,97 @@ function parseTvGuideFull(raw) {
   return { listings: listings, games: games }
 }
 
+function parseTvMatchenFull(raw, nowRef) {
+  var empty = { listings: [], games: [] }
+  var html = String(raw || "")
+  if (html.indexOf("event-rt-main-info") === -1) return empty
+  var parts = html.split("<div class=\"event-rt-main-info\">")
+  var now = nowRef || new Date()
+  var baseYear = now.getFullYear()
+  var baseMonth = now.getMonth()
+  var listings = []
+  var games = []
+  for (var i = 1; i < parts.length; i++) {
+    var chunk = parts[i].split("<div id=\"")[0]
+    var dm = chunk.match(/match-info-rt-time"><b>(\d{1,2})<\/b>\s*<span>([A-Za-zäöåÄÖÅ]+)<\/span>/)
+    var tm = chunk.match(/match-info-rt__sport-time"><time>(\d{1,2}):(\d{2})<\/time>/)
+    var pm = chunk.match(/match-details-rt-participants"><a[^>]*><div>\s*(?:<!-- -->)?([^<]+?)(?:<!-- -->)?\s*-\s*(?:<!-- -->)?([^<]+?)(?:<!-- -->)?<\/div>/)
+    if (!dm || !pm) continue
+    var home = trim(pm[1])
+    var away = trim(pm[2])
+    if (!home || !away) continue
+    var day = Number(dm[1])
+    var monKey = dm[2].toLowerCase().slice(0, 3)
+    var mon = MONTHS_MAP[monKey]
+    if (mon === undefined) continue
+    var year = mon < baseMonth - 1 ? baseYear + 1 : baseYear
+    var hh = tm ? Number(tm[1]) : 0
+    var mm = tm ? Number(tm[2]) : 0
+    var utcMs = Date.UTC(year, mon, day, hh, mm)
+    var start = isoFromMs(utcMs)
+    var date = start ? start.slice(0, 10) : ""
+    var chanBlockMatch = chunk.match(/match-details-channels-rt">([\s\S]*?)<\/div>\s*<\/div>/)
+    var chanSearch = chanBlockMatch ? chanBlockMatch[1] : chunk
+    var chans = []
+    var iconRe = /icons-channels-rt-(\d+)/g
+    var im
+    while ((im = iconRe.exec(chanSearch)) !== null) {
+      var cn = TVMATCHEN_CHANNELS[im[1]]
+      if (cn) chans.push(cn)
+    }
+    var ariaRe = /aria-label="([^"]+)"/g
+    var am
+    while ((am = ariaRe.exec(chanSearch)) !== null) {
+      if (am[1]) chans.push(am[1])
+    }
+    var channel = pickLinearChannel(chans)
+    listings.push({ date: date, home: home, away: away, channel: channel })
+    var row = g(start, home, away, "", null, null, "scheduled")
+    row.channel = channel
+    row.channelShort = channel
+    games.push(row)
+  }
+  return { listings: listings, games: games }
+}
+
+function parseTvGuide(raw) {
+  return parseTvGuideFull(raw).listings
+}
+
+function parseTvGuideFull(raw, nowRef) {
+  var nu = parseTvNuFull(raw)
+  var tm = parseTvMatchenFull(raw, nowRef)
+  var listings = nu.listings.concat(tm.listings)
+  var baseGames = nu.games.length ? nu.games : tm.games
+  var games = applyChannels(baseGames, listings)
+  return { listings: listings, games: games }
+}
+
 function applyChannels(games, listings) {
   if (!listings || !listings.length) return games
-  var map = {}
+  var byDatePair = {}
+  var undatedByPair = {}
   for (var i = 0; i < listings.length; i++) {
     var L = listings[i]
-    map[pairKey(L.home, L.away)] = L.channel
-    map[pairKey(L.away, L.home)] = L.channel
+    if (!L || !L.channel) continue
+    var pk1 = pairKey(L.home, L.away)
+    var pk2 = pairKey(L.away, L.home)
+    var d = L.date || (L.start ? String(L.start).slice(0, 10) : "")
+    if (d) {
+      if (!byDatePair[d + "|" + pk1]) byDatePair[d + "|" + pk1] = L.channel
+      if (!byDatePair[d + "|" + pk2]) byDatePair[d + "|" + pk2] = L.channel
+    } else {
+      if (!undatedByPair[pk1]) undatedByPair[pk1] = L.channel
+      if (!undatedByPair[pk2]) undatedByPair[pk2] = L.channel
+    }
   }
   for (var g = 0; g < games.length; g++) {
-    var key = pairKey(games[g].home, games[g].away)
-    var ch = map[key] || ""
-    games[g].channel = ch
-    games[g].channelShort = ch
+    var game = games[g]
+    var key = pairKey(game.home, game.away)
+    var gd = game.dateKey || (game.start ? String(game.start).slice(0, 10) : "")
+    var ch = (gd ? byDatePair[gd + "|" + key] : "") || undatedByPair[key] || ""
+    game.channel = ch
+    game.channelShort = ch
   }
   return games
 }
