@@ -336,7 +336,7 @@ Panel {
     open: root.opened
     focusTarget: keyCatcher
     contentWidth: panel.fittedContentWidth(Style.space(320))
-    contentHeight: panel.fittedContentHeight(content.implicitHeight)
+    contentHeight: panel.fittedContentHeight(shlContent.implicitHeight)
 
     PanelKeyCatcher {
       id: keyCatcher
@@ -345,7 +345,7 @@ Panel {
       onTabRequested: function(direction) { root.switchPanel(direction) }
 
       Column {
-        id: content
+        id: shlContent
         width: parent.width
         spacing: Style.space(8)
 
@@ -384,7 +384,7 @@ Panel {
           model: groups
 
           Column {
-            width: content.width
+            width: shlContent.width
             spacing: Style.space(4)
 
             Text {
@@ -398,7 +398,7 @@ Panel {
               model: modelData.games
 
               Rectangle {
-                width: content.width
+                width: shlContent.width
                 implicitHeight: row.implicitHeight + Style.space(6)
                 color: "transparent"
 

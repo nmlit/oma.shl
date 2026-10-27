@@ -85,6 +85,21 @@ omarchy plugin update oma.shl --yes
 omarchy-restart-shell
 ```
 
+## Kompatibilitet med nyare Omarchy (0.1.4)
+
+Nyare Omarchy-versioner har fått en egenskap som heter `content` i `KeyboardPanel`. Panelens kolumn hade tidigare `id: content`, och det krockade med den nya egenskapen (qmllint: `id-shadows-member`). Efter en Omarchy-uppdatering kunde panelen då bli tom eller få fel bredd.
+
+- Id:t heter nu `shlContent`, och alla referenser i `Panel.qml` är uppdaterade.
+- Inga andra id:n i `Panel.qml` eller `BarWidget.qml` krockar med egenskaper i Omarchys komponenter (`Panel`, `KeyboardPanel`, `PanelKeyCatcher`, `BarWidget`, `WidgetButton`).
+- Beteendet är oförändrat.
+
+Uppdatera:
+
+```bash
+omarchy plugin update oma.shl --yes
+omarchy-restart-shell
+```
+
 ## Filstruktur
 
 ```

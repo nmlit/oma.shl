@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "oma.shl",
   "name": "SHL",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "author": "oma.shl",
   "license": "MIT",
   "description": "Nästa SHL-match och live-ställning i Omarchy-baren.",
