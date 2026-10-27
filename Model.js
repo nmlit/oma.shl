@@ -302,10 +302,31 @@ var TVMATCHEN_CHANNELS = {
   "2182": "Sjuan"
 }
 
+// Nätverket är ofta inte uppe när skalet startar (t.ex. direkt efter boot).
+// curl försöker själv några gånger, och Panel.qml gör dessutom egna omförsök
+// med backoff innan ett fel visas.
+var CURL_RETRY_OPTS = "--connect-timeout 10 --retry 3 --retry-delay 2 --retry-connrefused --retry-all-errors --retry-max-time 40"
+
+// Väntetid (ms) före omförsök nr `attempt` (0-baserat). -1 = ge upp och
+// vänta på ordinarie uppdateringsintervall.
+var RETRY_DELAYS_MS = [5000, 10000, 20000, 30000, 60000, 120000]
+
+function retryDelayMs(attempt) {
+  var n = Number(attempt)
+  if (!(n >= 0) || n >= RETRY_DELAYS_MS.length) return -1
+  return RETRY_DELAYS_MS[Math.floor(n)]
+}
+
+function fetchFailureKind(raw) {
+  // "empty" = inget svar alls (nätverk/DNS ej uppe), "parse" = svar men gick inte att tolka
+  var s = String(raw || "")
+  return s.replace(/\s+/g, "").length < 80 ? "empty" : "parse"
+}
+
 function cappedCurl(url, timeoutSec, maxBytes) {
   return [
     "sh", "-c",
-    "curl -fsSL -A 'oma.shl/0.1' --max-time \"$2\" -o - -- \"$1\" | head -c \"$3\"",
+    "curl -fsSL -A 'oma.shl/0.1' " + CURL_RETRY_OPTS + " --max-time \"$2\" -o - -- \"$1\" | head -c \"$3\"",
     "oma.shl-fetch",
     String(url || ""),
     String(timeoutSec),
@@ -318,8 +339,8 @@ function tvCurl(url, timeoutSec, maxBytes) {
   var secondary = primary.indexOf("tvmatchen.nu") !== -1 ? "" : TV_FALLBACK_URL
   return [
     "sh", "-c",
-    "curl -fsSL -A 'oma.shl/0.1' --max-time \"$2\" -o - -- \"$1\" 2>/dev/null | head -c \"$3\" || true; " +
-    "if [ -n \"$4\" ]; then printf '\\n'; curl -fsSL -A 'oma.shl/0.1' --max-time \"$2\" -o - -- \"$4\" 2>/dev/null | head -c \"$3\" || true; fi",
+    "curl -fsSL -A 'oma.shl/0.1' " + CURL_RETRY_OPTS + " --max-time \"$2\" -o - -- \"$1\" 2>/dev/null | head -c \"$3\" || true; " +
+    "if [ -n \"$4\" ]; then printf '\\n'; curl -fsSL -A 'oma.shl/0.1' " + CURL_RETRY_OPTS + " --max-time \"$2\" -o - -- \"$4\" 2>/dev/null | head -c \"$3\" || true; fi",
     "oma.shl-tv-fetch",
     primary,
     String(timeoutSec),

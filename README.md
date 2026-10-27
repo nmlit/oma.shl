@@ -66,6 +66,25 @@ Säsongs-id i URL:en byts varje år. 2026/27 = `20961`.
 - Live-källa: HTML från stats.swehockey.se via `curl`. Parsern är medvetet enkel och går sönder om sidans markup ändras. Då faller pluginet tillbaka till senast lyckad lista / mock.
 - Det finns ingen officiell publik live-feed. “LIVE” sätts om klockan ligger inom tre timmar efter nedsläpp och resultatet inte är markerat som slut. Ställning kräver att swehockey-sidan redan har siffror.
 
+## Uppstart och nätverk (0.1.3)
+
+Direkt efter boot startar Omarchy-skalet ofta några sekunder innan nätverket är uppe. Tidigare gav det felet "Kunde inte parsa swehockey" fram till nästa ordinarie uppdatering (20 min), eller tills man körde `omarchy-restart-shell`.
+
+Nu gäller:
+
+- `curl` gör själv upp till 3 omförsök (`--retry 3 --retry-all-errors --connect-timeout 10`).
+- Misslyckas hämtningen ändå försöker pluginet igen efter 5 s, 10 s, 20 s, 30 s, 1 min och 2 min innan ett fel visas. Under tiden visar panelen "Väntar på nätverk…".
+- Senast lyckade matchlista och TV-kanaler behålls om en senare hämtning misslyckas.
+- TV-tablån (tv.nu/tvmatchen.nu) hämtas separat med egna omförsök och kan inte få swehockey-hämtningen att fallera.
+- Mellanklick nollställer omförsöken och hämtar direkt.
+
+Uppdatera:
+
+```bash
+omarchy plugin update oma.shl --yes
+omarchy-restart-shell
+```
+
 ## Filstruktur
 
 ```

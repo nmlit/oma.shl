@@ -41,6 +41,8 @@ Panel {
   property var games: []
   property string lastError: ""
   property string sourceLabel: "mock"
+  property int fetchAttempt: 0
+  property int tvAttempt: 0
 
   readonly property var headline: Model.pickHeadline(games)
   readonly property string label: Model.barLabel(headline, !!(bar && bar.vertical))
@@ -144,6 +146,10 @@ Panel {
   }
 
   function refresh() {
+    fetchAttempt = 0
+    tvAttempt = 0
+    fetchRetryTimer.stop()
+    tvRetryTimer.stop()
     startTvFetch()
     if (useMock) {
       loadMock()
@@ -173,6 +179,43 @@ Panel {
     fetchProc.running = true
   }
 
+  // Vid boot är nätverket ofta inte uppe än när skalet startar. Då får curl
+  // inget svar alls. I stället för att direkt visa ett fel försöker vi igen
+  // med backoff (5 s, 10 s, 20 s, 30 s, 1 min, 2 min) och behåller senaste
+  // lyckade data under tiden.
+  function handleFetchFailure(kind) {
+    var delay = Model.retryDelayMs(fetchAttempt)
+    fetchAttempt = fetchAttempt + 1
+    var haveData = rawGames.length > 0
+    if (delay >= 0) {
+      if (!haveData) {
+        sourceLabel = "hämtar"
+        lastError = kind === "empty"
+          ? "Väntar på nätverk… nytt försök om " + Math.round(delay / 1000) + " s"
+          : "Hämtar matcher… nytt försök om " + Math.round(delay / 1000) + " s"
+      }
+      fetchRetryTimer.interval = delay
+      fetchRetryTimer.restart()
+      return
+    }
+    if (haveData) return
+    if (kind === "empty") {
+      lastError = "Kunde inte hämta swehockey (inget svar)"
+      sourceLabel = "fetch-fail"
+    } else {
+      lastError = "Kunde inte parsa swehockey"
+      sourceLabel = "parse-fail"
+    }
+  }
+
+  function handleTvFailure() {
+    var delay = Model.retryDelayMs(tvAttempt)
+    tvAttempt = tvAttempt + 1
+    if (delay < 0) return
+    tvRetryTimer.interval = delay
+    tvRetryTimer.restart()
+  }
+
   function openSite() {
     Qt.openUrlExternally("https://www.shl.se/game-schedule")
   }
@@ -190,6 +233,20 @@ Panel {
     running: true
     repeat: true
     onTriggered: refresh()
+  }
+
+  Timer {
+    id: fetchRetryTimer
+    interval: 5000
+    repeat: false
+    onTriggered: { if (!useMock) startFetch() }
+  }
+
+  Timer {
+    id: tvRetryTimer
+    interval: 5000
+    repeat: false
+    onTriggered: startTvFetch()
   }
 
   Timer {
@@ -219,10 +276,22 @@ Panel {
     id: tvProc
     stdout: StdioCollector {
       onStreamFinished: {
-        var parsed = Model.parseTvGuideFull(this.text)
-        tvListings = parsed.listings || []
+        var parsed = { listings: [], games: [] }
+        try {
+          parsed = Model.parseTvGuideFull(this.text)
+        } catch (e) {
+          parsed = { listings: [], games: [] }
+        }
+        if (parsed.listings && parsed.listings.length) {
+          tvAttempt = 0
+          tvRetryTimer.stop()
+          tvListings = parsed.listings
+        } else {
+          // Behåll senaste kända kanaler och försök igen senare.
+          handleTvFailure()
+        }
         if (parsed.games && parsed.games.length) {
-          if (useMock || !rawGames.length || sourceLabel === "parse-fail" || sourceLabel === "fetch-fail") {
+          if (useMock || !rawGames.length || sourceLabel === "parse-fail" || sourceLabel === "fetch-fail" || sourceLabel === "hämtar") {
             applyGames(parsed.games, "tv.nu")
             return
           }
@@ -237,23 +306,26 @@ Panel {
     id: fetchProc
     stdout: StdioCollector {
       onStreamFinished: {
-        var parsed = Model.parseScheduleHtml(this.text)
+        var raw = this.text
+        var parsed = []
+        try {
+          parsed = Model.parseScheduleHtml(raw)
+        } catch (e) {
+          parsed = []
+        }
         if (!parsed.length) {
-          lastError = "Kunde inte parsa swehockey"
-          sourceLabel = "parse-fail"
+          handleFetchFailure(Model.fetchFailureKind(raw))
           return
         }
+        fetchAttempt = 0
+        fetchRetryTimer.stop()
         applyGames(parsed, "swehockey")
         lastError = ""
       }
     }
+    // Felhantering sker i onStreamFinished ovan (exit-koden är från `head`
+    // i pipen och säger inget om curl lyckades).
     stderr: StdioCollector {}
-    onExited: function(code) {
-      if (code !== 0 && !rawGames.length) {
-        lastError = "Fetch misslyckades (" + code + ")"
-        sourceLabel = "fetch-fail"
-      }
-    }
   }
 
   KeyboardPanel {
